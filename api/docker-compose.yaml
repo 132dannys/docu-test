@@ -1,0 +1,47 @@
+name: test-api
+version: "3.9"
+x-base-flask: &base-flask
+  environment: &base-flask-environment
+    TEST_DATABASE_URL: mongodb://localhost:27017/test
+  build:
+    context: .
+    target: local
+    dockerfile: Dockerfile
+  volumes:
+    - .:/opt/api
+  networks:
+    - default
+    - global
+  depends_on:
+    - mongo
+services:
+  flask:
+    <<: *base-flask
+    environment:
+      <<: *base-flask-environment
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mongo
+    volumes:
+      - .:/opt/api
+  mongo:
+    image: mongo
+    container_name: test-mongo
+    restart: always
+    hostname: test_mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: test
+      MONGO_INITDB_ROOT_PASSWORD: test
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongodb_data:/data/db
+
+volumes:
+  mongodb_data: { }
+
+networks:
+  global:
+    name: test
+    external: true
